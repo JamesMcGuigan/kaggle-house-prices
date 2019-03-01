@@ -27,6 +27,7 @@ scipy
 sympy
 
 # Other useful python libraries
+sklearn
 matplotlib
 seaborn
 pydash
