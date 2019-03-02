@@ -1,10 +1,11 @@
 import operator
+from typing import Tuple
 from typing import Union
 
 import pandas as pd
 from cached_property import cached_property
-from pandas.core.frame import DataFrame
 from pandas import Series
+from pandas.core.frame import DataFrame
 
 
 class Model:
@@ -71,13 +72,24 @@ class Model:
         return dataframe[ self.params['id'] ]
 
 
-    def fit( self ) -> dict:
+    def execute( self ):
+        self.fit()
+        filename = self.output()
+
+        return {
+            "class":      self.__class__.__name__,
+            "filename":   filename,
+            "scores":     self.scores(),
+            "score_best": self.score_best(),
+        }
+
+
+    def fit( self ) -> None:
         for (name, model) in self.models.items():
             model.fit(self.data['X_train'], self.data['Y_train'])
-        return self.score()
 
 
-    def score( self ) -> dict:
+    def scores( self ) -> dict:
         scores = {}
         for (name, model) in self.models.items():
             scores[name] = model.score(self.data['X_train'], self.data['Y_train'])
@@ -86,9 +98,9 @@ class Model:
         return scores
 
 
-    def best_model_name( self ) -> str:
-        scores = self.score()
-        return list(scores.keys())[0]
+    def score_best( self ) -> Tuple[str, float]:
+        scores = self.scores()
+        return list(scores.items())[0]
 
 
     def predict( self, dataframe: DataFrame = None, model_name: str = None ) -> dict:
@@ -104,7 +116,7 @@ class Model:
     def output( self, filename: str = None ) -> str:
         if filename is None: filename = self.params['output']
 
-        model_name   = self.best_model_name()
+        model_name   = self.score_best()[0]
         predictions  = self.predict( dataframe=self.data['X_test'], model_name=model_name )[model_name]
         ids          = self.to_IDs( self.data['X_test'] )
         submission   = pd.DataFrame({ self.params['Y_field']: predictions }, index=ids )

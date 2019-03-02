@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 
+import pprint
+
 from src import LeastSquaresCorr
 
-model    = LeastSquaresCorr()
-scores   = model.fit()
-filename = model.output()
+pp = pprint.PrettyPrinter(depth=6)
 
-print("scores:", scores)
-print("wrote:",  filename)
+pp.pprint( LeastSquaresCorr().execute() )

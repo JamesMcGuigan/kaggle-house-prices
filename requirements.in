@@ -33,3 +33,4 @@ seaborn
 pydash
 simplejson
 cached_property
+pprint
