@@ -5,4 +5,6 @@ TODO:
 - Regularization = LASSO + Others
 - feature engineering
 - PCA (principle component analysis)
-- subclasses for different experiements
+
+DONE:
+- subclasses for different experiments

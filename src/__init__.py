@@ -1,2 +1,2 @@
-from src.utils.Charts import Charts
-from src.models.Model import Model
+from src.utils  import Charts
+from src.models import Model, LeastSquaresCorr

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
-from src import Charts, Model
+from src import LeastSquaresCorr
 
-model = Model("./data/train.csv", "./data/test.csv")
-model.fit()
-scores = model.score()
+model    = LeastSquaresCorr()
+scores   = model.fit()
+filename = model.output()
+
 print("scores:", scores)
-model.output("./output/submission.csv")
-print("wrote:", "./output/submission.csv")
+print("wrote:",  filename)

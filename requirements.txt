@@ -8,6 +8,7 @@ appnope==0.1.0            # via ipython
 attrs==18.2.0             # via jsonschema
 backcall==0.1.0           # via ipython
 bleach==3.1.0             # via nbconvert
+cached-property==1.5.1
 click==7.0                # via pip-tools
 cycler==0.10.0            # via matplotlib
 decorator==4.3.2          # via ipython, traitlets

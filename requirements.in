@@ -32,3 +32,4 @@ matplotlib
 seaborn
 pydash
 simplejson
+cached_property
