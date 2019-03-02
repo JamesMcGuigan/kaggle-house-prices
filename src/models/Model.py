@@ -1,6 +1,5 @@
 import operator
-from typing import Tuple
-from typing import Union
+from typing import Union, Tuple
 
 import pandas as pd
 from cached_property import cached_property
@@ -38,11 +37,17 @@ class Model:
 
     @cached_property
     def data( self ):
-        return {
-            "X_test":       self.to_X( self.data_raw['test'] ),
-            "X_train":      self.to_X( self.data_raw['train'] ),
-            "Y_train":      self.to_Y( self.data_raw['train'] ),
+        data = {
+            "train":    self.to_model( self.data_raw['train'] ),
+            "test":     self.to_model( self.data_raw['test']  ),
+            "combined": pd.concat([ self.data_raw['test'], self.data_raw['train'] ], sort=False),
         }
+        data.update({
+            "X_test":   self.to_X( data['test']  ),
+            "X_train":  self.to_X( data['train'] ),
+            "Y_train":  self.to_Y( data['train'] ),
+        })
+        return data
 
     @cached_property
     def models( self ):
@@ -55,6 +60,10 @@ class Model:
     @cached_property
     def X_fields( self ) -> list:
         return self.data["test"].columns.values
+
+
+    def to_model( self, dataframe: DataFrame ) -> DataFrame:
+        return dataframe
 
 
     def to_X( self, dataframe: DataFrame ) -> DataFrame:
