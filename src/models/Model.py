@@ -129,7 +129,7 @@ class Model:
         model_name   = self.score_best()[0]
         predictions  = self.predict( dataframe=self.data['X_test'], model_name=model_name )[model_name]
         ids          = self.to_IDs( self.data['X_test'] )
-        submission   = pd.DataFrame({ self.params['Y_field']: predictions }, index=ids )
+        submission   = pd.DataFrame({ self.params['Y_field']: predictions }, index=ids ).round(2)
         csv_text     = submission.to_csv()
         with open(filename, "w") as file:
             file.write(csv_text)
