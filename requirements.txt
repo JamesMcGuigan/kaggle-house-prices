@@ -37,6 +37,7 @@ nbformat==4.4.0           # via ipywidgets, nbconvert, notebook
 nose==1.3.7
 notebook==5.7.4           # via jupyter, jupyterlab, jupyterlab-server, widgetsnbextension
 numpy==1.16.2
+orderedset==2.0.1
 packaging==19.0           # via pip-review
 pandas==0.24.1
 pandocfilters==1.4.2      # via nbconvert

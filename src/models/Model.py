@@ -33,21 +33,22 @@ class Model:
             "test":     test,
             "combined": pd.concat([ test, train ], sort=False),
         }
+        self.data = {}
+        self.init_data()
 
 
-    @cached_property
-    def data( self ):
-        data = {
+    def init_data( self ):
+        self.data = {
             "train":    self.to_model( self.data_raw['train'] ),
             "test":     self.to_model( self.data_raw['test']  ),
             "combined": pd.concat([ self.data_raw['test'], self.data_raw['train'] ], sort=False),
         }
-        data.update({
-            "X_test":   self.to_X( data['test']  ),
-            "X_train":  self.to_X( data['train'] ),
-            "Y_train":  self.to_Y( data['train'] ),
+        self.data.update({
+            "X_test":   self.to_X( self.data['test']  ),
+            "X_train":  self.to_X( self.data['train'] ),
+            "Y_train":  self.to_Y( self.data['train'] ),
         })
-        return data
+
 
     @cached_property
     def models( self ):
