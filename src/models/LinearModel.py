@@ -7,7 +7,7 @@ from pandas import Series
 from pandas.core.frame import DataFrame
 
 
-class Model:
+class LinearModel:
     params_default = {
         "id":       "Id",
         "Y_field":  "SalePrice",

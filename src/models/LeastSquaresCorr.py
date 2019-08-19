@@ -2,12 +2,12 @@ import sklearn.linear_model
 from cached_property import cached_property
 from orderedset import OrderedSet
 
-from .Model import Model
+from .LinearModel import LinearModel
 
 
-class LeastSquaresCorr(Model):
-    params_default = dict(Model.params_default, **{
-        "output":      "./output/LeastSquaresCorr.csv",
+class LeastSquaresCorr(LinearModel):
+    params_default = dict(LinearModel.params_default, **{
+        "output":      "./data/submissions/LeastSquaresCorr.csv",
         "comment":     "LinearRegression",
         "corr_filter": 0.5
     })
