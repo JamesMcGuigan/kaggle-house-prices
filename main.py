@@ -2,8 +2,9 @@
 
 import pprint
 
-from src import LeastSquaresCorr
+from src import LinearRegressionModel, CorrelationFilterModel
 
 pp = pprint.PrettyPrinter(depth=6)
 
-pp.pprint( LeastSquaresCorr().execute() )
+pp.pprint(LinearRegressionModel().execute())
+pp.pprint(CorrelationFilterModel().execute())

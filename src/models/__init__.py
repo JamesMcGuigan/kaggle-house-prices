@@ -1,2 +1,2 @@
-from .LeastSquaresCorr import LeastSquaresCorr
-from .LinearModel import LinearModel
+from .CorrelationFilterModel import CorrelationFilterModel
+from .LinearRegressionModel import LinearRegressionModel

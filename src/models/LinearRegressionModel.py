@@ -2,19 +2,23 @@ import operator
 from typing import Union, Tuple
 
 import pandas as pd
+import sklearn
+import sklearn.linear_model
 from cached_property import cached_property
 from pandas import Series
 from pandas.core.frame import DataFrame
 
+from ..utils import reset_root_dir
 
-class LinearModel:
+
+class LinearRegressionModel:
     params_default = {
         "id":       "Id",
         "Y_field":  "SalePrice",
         "train":    "./data/train.csv",
         "test":     "./data/test.csv",
-        "output":   "",
-        "comment":  "",
+        "output":   "./data/submissions/LinearRegressionModel.csv",
+        "comment":  "Baseline Linear Regression",
     }
 
     def __init__(self,
@@ -22,6 +26,7 @@ class LinearModel:
                  test:   Union[str, DataFrame] = None,
                  **kwargs,
     ):
+        reset_root_dir()
         self.params = dict(self.params_default, **kwargs)
 
         if train is  None:          train = self.params['train']
@@ -43,16 +48,19 @@ class LinearModel:
             "test":     self.to_model( self.data_raw['test']  ),
             "combined": pd.concat([ self.data_raw['test'], self.data_raw['train'] ], sort=False),
         }
+        # BUGFIX: Linear Regression Crashes if provided with non-numeric inputs
         self.data.update({
-            "X_test":   self.to_X( self.data['test']  ),
-            "X_train":  self.to_X( self.data['train'] ),
-            "Y_train":  self.to_Y( self.data['train'] ),
+            "X_test":   self.to_X( self.data['test']  )._get_numeric_data(),
+            "X_train":  self.to_X( self.data['train'] )._get_numeric_data(),
+            "Y_train":  self.to_Y( self.data['train'] )._get_numeric_data(),
         })
 
 
     @cached_property
     def models( self ):
-        return {}
+        return {
+            "LinearRegression": sklearn.linear_model.LinearRegression()
+        }
 
     @cached_property
     def Y_field( self ) -> str:
@@ -89,8 +97,7 @@ class LinearModel:
         return {
             "class":      self.__class__.__name__,
             "filename":   filename,
-            "scores":     self.scores(),
-            "score_best": self.score_best(),
+            "scores":     self.scores()
         }
 
 
@@ -110,7 +117,10 @@ class LinearModel:
 
     def score_best( self ) -> Tuple[str, float]:
         scores = self.scores()
-        return list(scores.items())[0]
+        if len(scores):
+            return list(scores.items())[0]
+        else:
+            return ('No Model', 0)
 
 
     def predict( self, dataframe: DataFrame = None, model_name: str = None ) -> dict:

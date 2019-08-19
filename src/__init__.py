@@ -1,2 +1,2 @@
-from src.models import LinearModel, LeastSquaresCorr
+from src.models import LinearRegressionModel, CorrelationFilterModel
 from src.utils import Charts

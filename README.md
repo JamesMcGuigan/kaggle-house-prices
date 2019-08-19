@@ -20,18 +20,21 @@ kaggle competitions submit -c house-prices-advanced-regression-techniques -f dat
 
 ## High Scores
 
-| Score   | Rank | Method | File   | 
-|---------|------|--------|--------| 
-| 0.74279 | 4180 | sklearn.linear_model.LinearRegression() on fields: .corr() > 0.5 | [src/models/LeastSquaresCorr.py]()  |
+| Date       | Score   | Rank | Method | File | 
+|------------|---------|------|--------|------|
+| 2019-08-19 | 0.43452 | 4079 | LinearRegression on raw numeric fields | [src/models/LinearRegressionModel.py]() | 
+| 2019-03-03 | 0.74279 | 4180 | sklearn.linear_model.LinearRegression() on all fields: .corr() > 0.5 | [src/models/LeastSquaresCorr.py]() | | 0.74279 |
+
 
 
 ## Data Exploration
 
-| Notebook                                | Analysis                           | 
-|-----------------------------------------|------------------------------------| 
-| [notebooks/1_dataset.ipynb]()           | Initial Exploration of the Dataset |
-| [notebooks/2_correlations.ipynb]()      | Correlation Analysis               |
-| [notebooks/3_linear_regression.ipynb]() | Linear Regression Exploration      |
+| Notebook                                         | Analysis                           | 
+|--------------------------------------------------|------------------------------------| 
+| [notebooks/1_dataset.ipynb]()                    | Initial Exploration of the Dataset |
+| [notebooks/2_correlations.ipynb]()               | Correlation Analysis               |
+| [notebooks/3_baseline_linear_regression.ipynb]() | Baseline Linear Regression         |
+
 
 
  
