@@ -1,2 +1,3 @@
 from .CorrelationFilterModel import CorrelationFilterModel
+from .FeatureEncoding import FeatureEncoding
 from .LinearRegressionModel import LinearRegressionModel

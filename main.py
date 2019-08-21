@@ -2,9 +2,10 @@
 
 import pprint
 
-from src import LinearRegressionModel, CorrelationFilterModel
+from src.models import LinearRegressionModel, FeatureEncoding
 
 pp = pprint.PrettyPrinter(depth=6)
 
-pp.pprint(LinearRegressionModel().execute())
-pp.pprint(CorrelationFilterModel().execute())
+pp.pprint( FeatureEncoding().execute() )
+pp.pprint( LinearRegressionModel().execute()  )
+# pp.pprint( CorrelationFilterModel().execute() )

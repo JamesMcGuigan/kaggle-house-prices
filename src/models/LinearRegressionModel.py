@@ -5,9 +5,9 @@ import numpy as np
 import pandas as pd
 import sklearn
 import sklearn.linear_model
-from cached_property import cached_property
 from pandas import Series
 from pandas.core.frame import DataFrame
+from property_cached import cached_property
 from sklearn.metrics import mean_squared_log_error
 from sklearn.model_selection import train_test_split
 
@@ -20,8 +20,7 @@ class LinearRegressionModel:
         "Y_field":  "SalePrice",
         "train":    "./data/train.csv",
         "test":     "./data/test.csv",
-        "output":   "./data/submissions/LinearRegressionModel.csv",
-        "comment":  "Baseline Linear Regression",
+        "comment":  "",
     }
 
     def __init__(self,
@@ -30,6 +29,7 @@ class LinearRegressionModel:
                  **kwargs,
     ):
         reset_root_dir()
+        self.params_default['output'] = f"./data/submissions/{self.__class__.__name__}.csv"
         self.params = dict(self.params_default, **kwargs)
 
         if train is  None:          train = self.params['train']
@@ -68,11 +68,11 @@ class LinearRegressionModel:
         }
         # BUGFIX: Linear Regression Crashes if provided with non-numeric inputs
         self.data.update({
-            "X_test":      self.to_X( self.data['test']     )._get_numeric_data(),
-            "X_train":     self.to_X( self.data['train']    )._get_numeric_data(),
-            "Y_train":     self.to_Y( self.data['train']    )._get_numeric_data(),
-            "X_validate":  self.to_X( self.data['validate'] )._get_numeric_data(),
-            "Y_validate":  self.to_Y( self.data['validate'] )._get_numeric_data(),            
+            "X_test":      self.to_X( self.data['test']     ),
+            "X_train":     self.to_X( self.data['train']    ),
+            "Y_train":     self.to_Y( self.data['train']    ),
+            "X_validate":  self.to_X( self.data['validate'] ),
+            "Y_validate":  self.to_Y( self.data['validate'] ),
         })
 
 
@@ -86,21 +86,19 @@ class LinearRegressionModel:
     def Y_field( self ) -> str:
         return self.params['Y_field']
 
-    @cached_property
-    def X_fields( self ) -> list:
-        return self.data["test"].columns.values
-
-
     def to_model( self, dataframe: DataFrame ) -> DataFrame:
         return dataframe
 
-
     def to_X( self, dataframe: DataFrame ) -> DataFrame:
         dataframe = dataframe.drop( columns=self.params['Y_field'], errors='ignore' )
-        dataframe = dataframe[ self.X_fields ]
-        dataframe = dataframe.fillna(0)
+        dataframe = self.X_features( dataframe )
+        dataframe = dataframe._get_numeric_data()  # BUGFIX: Linear Regression Crashes if provided with non-numeric inputs
+        dataframe = dataframe.fillna(0)            # allow X_features() to do custom fillna() first
         return dataframe
 
+    def X_features( self, dataframe: DataFrame ) -> DataFrame:
+        # Extend in subclasses
+        return dataframe
 
     def to_Y( self, dataframe: DataFrame ) -> Series:
         return dataframe[ self.params['Y_field'] ]
@@ -114,16 +112,19 @@ class LinearRegressionModel:
         self.fit()
         filename = self.output()
         scores   = self.scores()
-
-        return {
+        output = {
             "class":      self.__class__.__name__,
             "filename":   filename,
-            "scores":     list(scores.values())[0] if len(scores) == 1 else scores
+            "scores":     list(scores.values())[0] if len(scores) == 1 else scores,
         }
+        if self.params['comment']:
+            output["comment"] = self.params['comment']
+        return output
 
 
     def fit( self ) -> None:
         for (name, model) in self.models.items():
+            # DEBUG: print( "fit X/Y shape", self.data['X_train'].shape, self.data['Y_train'].shape )
             model.fit(self.data['X_train'], self.data['Y_train'])
 
 
@@ -148,6 +149,7 @@ class LinearRegressionModel:
         # sklearn.linear_model.LinearRegression() uses R^2 as its default scoring method.
         # - https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LinearRegression.html
         # - https://www.investopedia.com/terms/r/r-squared.asp
+        # DEBUG: print( "score X/Y shape", self.data['X_validate'].shape, self.data['Y_validate'].shape )
         return model.score( self.data['X_validate'], self.data['Y_validate'] )
 
 

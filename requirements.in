@@ -33,9 +33,17 @@ matplotlib
 seaborn
 pydash
 simplejson
-cached_property
+property-cached
 pprint
 orderedset
+sortedcontainers==0.9.6
+
+
+# Functional Programming
+pydash    # https://pydash.readthedocs.io/en/latest/
+cytoolz   # https://toolz.readthedocs.io/en/latest/
+fn        # https://github.com/kachayev/fn.py
+funcy     # https://funcy.readthedocs.io/en/latest/
 
 # Security fixes
 Jinja2>=2.10.1

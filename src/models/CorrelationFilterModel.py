@@ -1,6 +1,6 @@
 import sklearn.linear_model
-from cached_property import cached_property
 from orderedset import OrderedSet
+from property_cached import cached_property
 
 from .LinearRegressionModel import LinearRegressionModel
 
