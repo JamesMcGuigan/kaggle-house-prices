@@ -13,6 +13,13 @@ from .LinearRegressionModel import LinearRegressionModel
 class FeatureEncoding( LinearRegressionModel ):
     params_default = LinearRegressionModel.params_default
     params_default.update({
+        'features': [
+            'X_feature_exclude',
+            'X_feature_year_ages',
+            'X_feature_label_encode',
+            'X_feature_onehot',
+            # 'X_feature_polynomial',
+        ],
         'X_feature_exclude':    ['id'],
         'X_feature_year_ages':  ['YearBuilt', 'YearRemodAdd', 'GarageYrBlt', 'YrSold'],
         'X_feature_label_encode':  {
@@ -32,15 +39,17 @@ class FeatureEncoding( LinearRegressionModel ):
             "Exterior1st", "Exterior2nd",
             "BsmtFinType1", "BsmtFinType2",
         ],
+        'X_feature_polynomial': 3,
         "comment":  "",
     })
 
 
     def X_features( self, dataframe: DataFrame ):
-        dataframe = self.X_feature_year_ages( dataframe )
-        dataframe = self.X_feature_label_encode( dataframe )
-        dataframe = self.X_feature_onehot( dataframe )
-        dataframe = self.X_feature_exclude( dataframe )
+        if 'X_feature_year_ages'    in self.params['features']: dataframe = self.X_feature_year_ages(    dataframe )
+        if 'X_feature_label_encode' in self.params['features']: dataframe = self.X_feature_label_encode( dataframe )
+        if 'X_feature_onehot'       in self.params['features']: dataframe = self.X_feature_onehot(       dataframe )
+        if 'X_feature_exclude'      in self.params['features']: dataframe = self.X_feature_exclude(      dataframe )
+        # if 'X_feature_polynomial'   in self.params['features']: dataframe = self.X_feature_polynomial(   dataframe )
 
         # Check all remaining columns have been converted to numeric
         # assert len( set(dataframe.columns) - set(dataframe._get_numeric_data().columns) ) == 0
