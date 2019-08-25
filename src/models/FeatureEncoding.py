@@ -13,8 +13,7 @@ from .LinearRegressionModel import LinearRegressionModel
 
 
 class FeatureEncoding( LinearRegressionModel ):
-    params_default = LinearRegressionModel.params_default
-    params_default.update({
+    params_default = dict( LinearRegressionModel.params_default, **{
         'features': [
             'X_feature_exclude',
             'X_feature_year_ages',
@@ -147,7 +146,7 @@ class FeatureEncoding( LinearRegressionModel ):
         model             = PolynomialFeatures( degree=self.params['X_feature_polynomial'] )
 
         columns           = self._X_feature_polynomial_columns(dataframe)
-        linear_subset     = dataframe[ columns ].fillna(0)
+        linear_subset     = dataframe[ columns ]._get_numeric_data().fillna(0)
         polynomial_subset = model.fit_transform( linear_subset )
         polynomial_labels = model.get_feature_names( linear_subset.columns )
         polynomial_df     = DataFrame( polynomial_subset, columns=polynomial_labels )
