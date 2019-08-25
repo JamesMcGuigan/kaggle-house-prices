@@ -6,7 +6,6 @@ import numpy as np
 import pandas as pd
 import pydash
 import sklearn
-import sklearn.linear_model
 from cytoolz.itertoolz import first
 from pandas import Series
 from pandas.core.frame import DataFrame
@@ -25,7 +24,7 @@ class LinearRegressionModel:
         "train":    "./data/train.csv",
         "test":     "./data/test.csv",
         "features": [],
-        "comment":  "",
+        "name":     "",
     }
 
     def __init__(self,
@@ -34,7 +33,8 @@ class LinearRegressionModel:
         **kwargs,
     ):
         reset_root_dir()
-        self.params_default['outfile'] = f"./data/submissions/{self.__class__.__name__}.csv"
+        self.params_default['name']    = self.__class__.__name__,
+        self.params_default['outfile'] = f"./data/submissions/{kwargs['name'] or self.__class__.__name__}.csv"
         self.params = dict(self.params_default, **kwargs)
 
         if train is  None:          train = self.params['train']
