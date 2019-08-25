@@ -19,7 +19,6 @@ class FeatureEncoding( LinearRegressionModel ):
             'X_feature_year_ages',
             'X_feature_label_encode',
             'X_feature_onehot',
-            'X_feature_polynomial',
         ],
         'X_feature_exclude':    ['id'],
         'X_feature_year_ages':  ['YearBuilt', 'YearRemodAdd', 'GarageYrBlt', 'YrSold'],
@@ -121,6 +120,22 @@ class FeatureEncoding( LinearRegressionModel ):
 
         # Mark original categorical columns for exclusion
         self.params['X_feature_exclude'] += self.params['X_feature_onehot']
+        return dataframe
+
+
+
+
+class PolynomialFeatureEncoding( FeatureEncoding ):
+    params_default = dict( FeatureEncoding.params_default, **{
+        'features': FeatureEncoding.params_default['features'] + [
+            'X_feature_polynomial',
+        ],
+        'X_feature_polynomial': 2,  # 1 = 40 features | 2 = 820 features |  3 = 11,480 features
+    })
+
+
+    def X_features( self, dataframe: DataFrame ):
+        if 'X_feature_polynomial'   in self.params['features']: dataframe = self.X_feature_polynomial(   dataframe )
         return dataframe
 
 
