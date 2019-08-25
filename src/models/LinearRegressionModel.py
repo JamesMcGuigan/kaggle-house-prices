@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from typing import Union, Tuple
+from typing import Union, Tuple, Dict, Any
 
 import numpy as np
 import pandas as pd
@@ -20,13 +20,14 @@ class LinearRegressionModel:
         "Y_field":  "SalePrice",
         "train":    "./data/train.csv",
         "test":     "./data/test.csv",
+        "features": [],
         "comment":  "",
     }
 
     def __init__(self,
-                 train:  Union[str, DataFrame] = None,
-                 test:   Union[str, DataFrame] = None,
-                 **kwargs,
+        train:  Union[str, DataFrame] = None,
+        test:   Union[str, DataFrame] = None,
+        **kwargs,
     ):
         reset_root_dir()
         self.params_default['output'] = f"./data/submissions/{self.__class__.__name__}.csv"
@@ -57,6 +58,7 @@ class LinearRegressionModel:
         }
         self.data = {}
         self.init_data()
+        self.fit()
 
 
     def init_data( self ):
@@ -76,8 +78,32 @@ class LinearRegressionModel:
         })
 
 
+
+    ##### Executions #####
+
+    def fit( self ):
+        for (name, model) in self.models.items():
+            # DEBUG: print( "fit X/Y shape", self.data['X_train'].shape, self.data['Y_train'].shape )
+            model.fit(self.data['X_train'], self.data['Y_train'])
+        return self
+
+
+    def predict( self, dataframe: DataFrame = None, model_name: str = None ) -> dict:
+        if dataframe is None: dataframe = self.data['X_test']
+
+        predictions = {}
+        for (name, model) in self.models.items():
+            if name == model_name or model_name is None:
+                predictions[name] = model.predict( dataframe )
+        return predictions
+
+
+
+    ##### Transformations #####
+
     @cached_property
     def models( self ):
+        # noinspection PyUnresolvedReferences
         return {
             "LinearRegression": sklearn.linear_model.LinearRegression()
         }
@@ -92,6 +118,7 @@ class LinearRegressionModel:
     def to_X( self, dataframe: DataFrame ) -> DataFrame:
         dataframe = dataframe.drop( columns=self.params['Y_field'], errors='ignore' )
         dataframe = self.X_features( dataframe )
+        # noinspection PyProtectedMember
         dataframe = dataframe._get_numeric_data()  # BUGFIX: Linear Regression Crashes if provided with non-numeric inputs
         dataframe = dataframe.fillna(0)            # allow X_features() to do custom fillna() first
         return dataframe
@@ -108,25 +135,8 @@ class LinearRegressionModel:
         return dataframe[ self.params['id'] ]
 
 
-    def execute( self ):
-        self.fit()
-        filename = self.output()
-        scores   = self.scores()
-        output = {
-            "class":      self.__class__.__name__,
-            "filename":   filename,
-            "scores":     list(scores.values())[0] if len(scores) == 1 else scores,
-        }
-        if self.params['comment']:
-            output["comment"] = self.params['comment']
-        return output
 
-
-    def fit( self ) -> None:
-        for (name, model) in self.models.items():
-            # DEBUG: print( "fit X/Y shape", self.data['X_train'].shape, self.data['Y_train'].shape )
-            model.fit(self.data['X_train'], self.data['Y_train'])
-
+    ##### Scores #####
 
     def scores( self ) -> OrderedDict:
         scores = {}
@@ -184,17 +194,17 @@ class LinearRegressionModel:
             return ('No Model', 0)
 
 
-    def predict( self, dataframe: DataFrame = None, model_name: str = None ) -> dict:
-        if dataframe is None: dataframe = self.data['X_test']
 
-        predictions = {}
-        for (name, model) in self.models.items():
-            if name == model_name or model_name is None:
-                predictions[name] = model.predict( dataframe )
-        return predictions
+    ##### Output #####
+
+    def execute( self ) -> Dict[str, Any]:
+        filename = self.write()
+        logfile  = self.summary()
+        logfile["filename"] = filename
+        return logfile
 
 
-    def output( self, filename: str = None ) -> str:
+    def write(self, filename: str = None) -> str:
         if filename is None: filename = self.params['output']
 
         model_name   = self.score_best()[0]
@@ -206,3 +216,19 @@ class LinearRegressionModel:
             file.write(csv_text)
 
         return filename
+
+
+    def summary(self) -> Dict[str, Any]:
+        scores   = self.scores()
+        logfile = {
+            "class":      self.__class__.__name__,
+            "features":   " ".join( self.params['features'] ),
+            "scores":     list(scores.values())[0] if len(scores) == 1 else scores,
+        }
+        if self.params['comment']:
+            logfile["comment"] = self.params['comment']
+        return logfile
+
+
+    def features_label(self) -> str:
+        return self.__class__.__name__ + ": " + " ".join( self.params['features'] )
