@@ -3,9 +3,11 @@ import re
 import numpy as np
 import pandas as pd
 from cytoolz import groupby, curry
+from orderedset import OrderedSet
 from pandas import DataFrame, CategoricalDtype
 from pandas.core.common import flatten
 from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import PolynomialFeatures
 
 from .LinearRegressionModel import LinearRegressionModel
 
@@ -18,7 +20,7 @@ class FeatureEncoding( LinearRegressionModel ):
             'X_feature_year_ages',
             'X_feature_label_encode',
             'X_feature_onehot',
-            # 'X_feature_polynomial',
+            'X_feature_polynomial',
         ],
         'X_feature_exclude':    ['id'],
         'X_feature_year_ages':  ['YearBuilt', 'YearRemodAdd', 'GarageYrBlt', 'YrSold'],
@@ -39,7 +41,7 @@ class FeatureEncoding( LinearRegressionModel ):
             "Exterior1st", "Exterior2nd",
             "BsmtFinType1", "BsmtFinType2",
         ],
-        'X_feature_polynomial': 3,
+        'X_feature_polynomial': 3,  # 1 = 40 features,  # 2 = 820 features |  3 = 11,480 features
         "comment":  "",
     })
 
@@ -49,7 +51,7 @@ class FeatureEncoding( LinearRegressionModel ):
         if 'X_feature_label_encode' in self.params['features']: dataframe = self.X_feature_label_encode( dataframe )
         if 'X_feature_onehot'       in self.params['features']: dataframe = self.X_feature_onehot(       dataframe )
         if 'X_feature_exclude'      in self.params['features']: dataframe = self.X_feature_exclude(      dataframe )
-        # if 'X_feature_polynomial'   in self.params['features']: dataframe = self.X_feature_polynomial(   dataframe )
+        if 'X_feature_polynomial'   in self.params['features']: dataframe = self.X_feature_polynomial(   dataframe )
 
         # Check all remaining columns have been converted to numeric
         # assert len( set(dataframe.columns) - set(dataframe._get_numeric_data().columns) ) == 0
@@ -120,3 +122,41 @@ class FeatureEncoding( LinearRegressionModel ):
         # Mark original categorical columns for exclusion
         self.params['X_feature_exclude'] += self.params['X_feature_onehot']
         return dataframe
+
+
+    def _X_feature_polynomial_columns(self, dataframe: DataFrame) -> list:
+        excluded_prefixes = list( self.params['X_feature_exclude'] ) \
+                          + list( self.params['X_feature_onehot']  )
+
+        columns = OrderedSet( dataframe.columns.values )
+        for column_prefix in excluded_prefixes:
+            column_prefix = re.sub(r'\d+(st|nd|rd)?$', '', column_prefix)  # remove 1st, 2nd, 3rd
+            column_prefix = column_prefix+'_'                              # BUGFIX HeatingQC_Numeric startswith Heating
+            for column in dataframe.columns.values:
+                if column in columns:
+                    if str(column).startswith( column_prefix ):
+                        columns.remove( column )  # .discard() is .remove() without
+                        continue
+
+        columns = list( columns )
+        return columns
+
+
+    def X_feature_polynomial(self, dataframe: DataFrame) -> DataFrame:
+        model             = PolynomialFeatures( degree=self.params['X_feature_polynomial'] )
+
+        columns           = self._X_feature_polynomial_columns(dataframe)
+        linear_subset     = dataframe[ columns ].fillna(0)
+        polynomial_subset = model.fit_transform( linear_subset )
+        polynomial_labels = model.get_feature_names( linear_subset.columns )
+        polynomial_df     = DataFrame( polynomial_subset, columns=polynomial_labels )
+
+        # columns_to_merge  = polynomial_df.columns.difference( linear_subset.columns )
+        output = dataframe.copy(deep=True)
+        for column in polynomial_df.columns:
+            if not column in dataframe.columns:
+                output[column] = polynomial_df[column]
+
+        assert output.shape[0] == dataframe.shape[0]                                                    # Rows
+        assert output.shape[1] == dataframe.shape[1] + polynomial_df.shape[1] - linear_subset.shape[1]  # Columns
+        return output
