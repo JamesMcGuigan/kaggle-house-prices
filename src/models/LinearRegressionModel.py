@@ -1,8 +1,10 @@
+import itertools
 from collections import OrderedDict
-from typing import Union, Tuple, Dict
+from typing import Union, Tuple, Dict, List
 
 import numpy as np
 import pandas as pd
+import pydash
 import sklearn
 import sklearn.linear_model
 from cytoolz.itertoolz import first
@@ -32,7 +34,7 @@ class LinearRegressionModel:
         **kwargs,
     ):
         reset_root_dir()
-        self.params_default['output'] = f"./data/submissions/{self.__class__.__name__}.csv"
+        self.params_default['outfile'] = f"./data/submissions/{self.__class__.__name__}.csv"
         self.params = dict(self.params_default, **kwargs)
 
         if train is  None:          train = self.params['train']
@@ -138,6 +140,44 @@ class LinearRegressionModel:
 
 
 
+    ##### Feature Combinations #####
+
+    def all_feature_combinations( self, depth=0 ) -> List:
+        return self.__class__.feature_combinations( self.params['features'] )
+
+    @classmethod
+    def feature_combinations( cls, features: List, depth=0 ) -> List:
+        depth = depth or len(features)
+        # depth = np.min( np.max(0, depth), len(features) )
+
+        combinations = pydash.flatten([
+            list( itertools.combinations(features, n) )
+            for n in range(0, depth+1)
+        ])
+        combinations += [ tuple(features) ]
+        combinations  = pydash.uniq( combinations )
+
+        # DEBUG: print( type(combinations), combinations )
+        return combinations
+
+
+    def all_feature_scores( self, depth=0 ) -> List[Tuple]:
+        return self.__class__.feature_scores( self.params['features'], depth )
+
+    @classmethod
+    def feature_scores( cls, features: list, depth=0 ) -> List[Tuple]:
+        feature_combinations = cls.feature_combinations( features, depth )
+        output = []
+        for features in feature_combinations:
+            model = cls( features=features )
+            for model_score in model.model_scores().values():
+                row = ( model_score['RMSLE'], model_score['class'], model_score['name'], " ".join(features) )
+                output.append( row )
+        return sorted(output)
+
+
+
+
     ##### Scores #####
 
     def model_scores( self ) -> OrderedDict:
@@ -165,7 +205,8 @@ class LinearRegressionModel:
         # - https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LinearRegression.html
         # - https://www.investopedia.com/terms/r/r-squared.asp
         # DEBUG: print( "score X/Y shape", self.data['X_validate'].shape, self.data['Y_validate'].shape )
-        return model.score( self.data['X_validate'], self.data['Y_validate'] )
+        score_re = model.score( self.data['X_validate'], self.data['Y_validate'] )
+        return round(score_re, 4)
 
 
     def score_rmsle(self, model):
@@ -188,7 +229,8 @@ class LinearRegressionModel:
         # return np.sqrt( np.mean(calc) )
 
         # NOTE: this is testing against the validation dataset, whereas Kaggle tests against 50% of train dataset
-        return np.sqrt( mean_squared_log_error( observed, predicted ) )
+        score_rmsle = np.sqrt( mean_squared_log_error( observed, predicted ) )
+        return round(score_rmsle, 4)
 
 
     ##### Output #####
@@ -206,7 +248,7 @@ class LinearRegressionModel:
 
 
     def write(self, filename: str = None) -> str:
-        if filename is None: filename = self.params['output']
+        if filename is None: filename = self.params['outfile']
 
         best         = first( self.model_scores().values() )
         model_name   = best['name']
