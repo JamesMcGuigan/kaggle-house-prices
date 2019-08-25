@@ -6,6 +6,9 @@ from src.models import LinearRegressionModel, FeatureEncoding
 
 pp = pprint.PrettyPrinter(depth=6)
 
-pp.pprint( FeatureEncoding().execute() )
-pp.pprint( LinearRegressionModel().execute()  )
-# pp.pprint( CorrelationFilterModel().execute() )
+results = sorted([
+    FeatureEncoding().execute(),
+    LinearRegressionModel().execute()
+])
+for result in results:
+    print( result )

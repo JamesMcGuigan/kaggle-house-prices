@@ -41,7 +41,7 @@ class FeatureEncoding( LinearRegressionModel ):
             "Exterior1st", "Exterior2nd",
             "BsmtFinType1", "BsmtFinType2",
         ],
-        'X_feature_polynomial': 3,  # 1 = 40 features,  # 2 = 820 features |  3 = 11,480 features
+        'X_feature_polynomial': 2,  # 1 = 40 features | 2 = 820 features |  3 = 11,480 features
         "comment":  "",
     })
 
@@ -97,6 +97,7 @@ class FeatureEncoding( LinearRegressionModel ):
 
     def X_feature_onehot(self, dataframe: DataFrame) -> DataFrame:
         # fieldgroups[basename] = [ fieldname ]
+        # noinspection PyArgumentList
         fieldgroups = groupby(
             curry(re.sub)('\d+(st|nd|rd)?$')(''),  # basename
             self.params['X_feature_onehot']        # fieldnames

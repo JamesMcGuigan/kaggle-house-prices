@@ -1,13 +1,15 @@
 from collections import OrderedDict
-from typing import Union, Tuple, Dict, Any
+from typing import Union, Tuple, Dict
 
 import numpy as np
 import pandas as pd
 import sklearn
 import sklearn.linear_model
+from cytoolz.itertoolz import first
 from pandas import Series
 from pandas.core.frame import DataFrame
 from property_cached import cached_property
+from sklearn.linear_model.base import LinearModel
 from sklearn.metrics import mean_squared_log_error
 from sklearn.model_selection import train_test_split
 
@@ -102,7 +104,7 @@ class LinearRegressionModel:
     ##### Transformations #####
 
     @cached_property
-    def models( self ):
+    def models( self ) -> Dict[str, LinearModel]:
         # noinspection PyUnresolvedReferences
         return {
             "LinearRegression": sklearn.linear_model.LinearRegression()
@@ -138,22 +140,25 @@ class LinearRegressionModel:
 
     ##### Scores #####
 
-    def scores( self ) -> OrderedDict:
+    def model_scores( self ) -> OrderedDict:
         scores = {}
         for (name, model) in self.models.items():
             scores[name] = {
-                "R^2":   self.score_r2(model),
-                "RMSLE": self.score_rmsle(model)
+                "name":     name,
+                "model":    model,
+                "class":    self.__class__.__name__,
+                "features": self.params['features'],
+                "R^2":      self.score_r2(model),
+                "RMSLE":    self.score_rmsle(model)
             }
 
-        # Sort by RMSLE score
+        # Sort by RMSLE score - first() == lowest == best
         scores = OrderedDict( sorted(
             scores.items(),
             key=lambda pair: pair[1]['RMSLE'],
             reverse=False
         ))
         return scores
-
 
     def score_r2( self, model ):
         # sklearn.linear_model.LinearRegression() uses R^2 as its default scoring method.
@@ -186,49 +191,34 @@ class LinearRegressionModel:
         return np.sqrt( mean_squared_log_error( observed, predicted ) )
 
 
-    def score_best( self ) -> Tuple[str, float]:
-        scores = self.scores()
-        if len(scores):
-            return list(scores.items())[0]
-        else:
-            return ('No Model', 0)
-
-
-
     ##### Output #####
 
-    def execute( self ) -> Dict[str, Any]:
+    def execute( self ) -> Tuple[float, str, str, str]:
         filename = self.write()
         logfile  = self.summary()
-        logfile["filename"] = filename
         return logfile
+
+
+    def summary(self) -> Tuple[float, str, str, str]:
+        best = first( self.model_scores().values() )
+        # return ( best['RMSLE'], best )
+        return ( best['RMSLE'], best['class'], best['name'], " ".join( best['features'] ) )
 
 
     def write(self, filename: str = None) -> str:
         if filename is None: filename = self.params['output']
 
-        model_name   = self.score_best()[0]
-        predictions  = self.predict( dataframe=self.data['X_test'], model_name=model_name )[model_name]
+        best         = first( self.model_scores().values() )
+        model_name   = best['name']
+
         ids          = self.to_IDs( self.data['X_test'] )
+        predictions  = self.predict( dataframe=self.data['X_test'], model_name=model_name )[model_name]
         submission   = pd.DataFrame({ self.params['Y_field']: predictions }, index=ids ).round(2)
         csv_text     = submission.to_csv()
         with open(filename, "w") as file:
             file.write(csv_text)
+            print( f'Wrote: {filename}' )
 
         return filename
 
 
-    def summary(self) -> Dict[str, Any]:
-        scores   = self.scores()
-        logfile = {
-            "class":      self.__class__.__name__,
-            "features":   " ".join( self.params['features'] ),
-            "scores":     list(scores.values())[0] if len(scores) == 1 else scores,
-        }
-        if self.params['comment']:
-            logfile["comment"] = self.params['comment']
-        return logfile
-
-
-    def features_label(self) -> str:
-        return self.__class__.__name__ + ": " + " ".join( self.params['features'] )
