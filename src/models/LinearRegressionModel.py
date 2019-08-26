@@ -33,8 +33,8 @@ class LinearRegressionModel:
         **kwargs,
     ):
         reset_root_dir()
-        self.params_default['name']    = self.__class__.__name__,
-        self.params_default['outfile'] = f"./data/submissions/{kwargs['name'] or self.__class__.__name__}.csv"
+        self.params_default['name']    = self.__class__.__name__
+        self.params_default['outfile'] = f"./data/submissions/{ dict(kwargs).get('name', self.__class__.__name__) }.csv"
         self.params = dict(self.params_default, **kwargs)
 
         if train is  None:          train = self.params['train']
@@ -179,6 +179,12 @@ class LinearRegressionModel:
 
 
     ##### Scores #####
+
+    def model_scores_list( self ) -> List[Tuple]:
+        return [
+            (score['RMSLE'], self.params['name'], label )
+            for (label, score) in self.model_scores().items()
+        ]
 
     def model_scores( self ) -> OrderedDict:
         scores = {}
