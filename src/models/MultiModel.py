@@ -6,7 +6,7 @@ from property_cached import cached_property
 from sklearn import linear_model
 from sklearn.linear_model.base import LinearModel
 
-from src.models import LinearRegressionModel, FeatureEncoding, PolynomialFeatureEncoding
+from src.models import LinearRegressionModel, FeatureEncoding, PolynomialFeatureEncoding, SquaredFeatureEncoding
 
 
 # Simplified selection of first-choice models
@@ -25,12 +25,13 @@ class RegularizationModel():
             "LassoLars":                    linear_model.LassoLars(eps=0.01),                       # LassoLars([alpha, …])	Lasso model fit with Least Angle Regression a.k.a.
             "LassoLarsIC":                  linear_model.LassoLarsIC(eps=0.01),                     # LassoLarsIC([criterion, …])	Lasso model fit with Lars using BIC or AIC for model selection
             "ARDRegression":                linear_model.ARDRegression(),                           #  ARDRegression([n_iter, tol, …])	Bayesian ARD regression.
-            "BayesianRidge":                linear_model.BayesianRidge(),                           # BayesianRidge([n_iter, tol, …])	Bayesian ridge regression.
+            "ElasticNet":                   linear_model.ElasticNet(),                              # linear_model.ElasticNet([alpha, l1_ratio, …])	Linear regression with combined L1 and L2 priors as regularizer.
         }
 
 class RegularizationModelLinear(     RegularizationModel, LinearRegressionModel     ): pass
 class RegularizationModelFeatures(   RegularizationModel, FeatureEncoding           ): pass
 class RegularizationModelPolynomial( RegularizationModel, PolynomialFeatureEncoding ): pass
+class RegularizationModelSquared(    RegularizationModel, SquaredFeatureEncoding    ): pass
 
 
 
@@ -66,6 +67,9 @@ class MultiModel():
             "RidgeCV":                      linear_model.RidgeCV(cv=5),                             # RidgeCV([alphas, …])	Ridge regression with built-in cross-validation.
             "SGDClassifier":                linear_model.SGDClassifier(max_iter=1000, tol=1e-3),    # SGDClassifier([loss, penalty, …])	Linear classifiers (SVM, logistic regression, a.o.) with SGD training.
 
+            "ElasticNet":                   linear_model.ElasticNet(),                              # linear_model.ElasticNet([alpha, l1_ratio, …])	Linear regression with combined L1 and L2 priors as regularizer.
+            "ElasticNetCV":                 linear_model.ElasticNetCV(cv=5),                        # linear_model.ElasticNetCV([l1_ratio, eps, …])	Elastic Net model with iterative fitting along a regularization path.
+
             ### Ignore These
             # "LogisticRegression":           linear_model.LogisticRegression(),                    # LogisticRegression([penalty, …])	Logistic Regression (aka logit, MaxEnt) classifier.
             # "LogisticRegressionCV":         linear_model.LogisticRegressionCV(cv=5),              # LogisticRegressionCV([Cs, …])	Logistic Regression CV (aka logit, MaxEnt) classifier.
@@ -85,58 +89,59 @@ class MultiModel():
             # "BayesianRidgeNormalize":       linear_model.BayesianRidge(normalize=True),             # BayesianRidge([n_iter, tol, …])	Bayesian ridge regression.
         }
 
-class MultiModelLinear(MultiModel, LinearRegressionModel): pass
-class MultiModelFeatures(MultiModel, FeatureEncoding): pass
-class MultiModelPolynomial(MultiModel, PolynomialFeatureEncoding): pass
+class MultiModelLinear(     MultiModel, LinearRegressionModel     ): pass
+class MultiModelFeatures(   MultiModel, FeatureEncoding           ): pass
+class MultiModelPolynomial( MultiModel, PolynomialFeatureEncoding ): pass
+class MultiModelSquared(    MultiModel, SquaredFeatureEncoding    ): pass
 
 
 # Best out of: Ridge / Lasso / ElasticNet
 class RidgeFeatures(FeatureEncoding):
     @cached_property
     def models( self ) -> Dict[str, LinearModel]:
-        return {
-            "RidgeCV":          linear_model.RidgeCV(cv=5),            # RidgeCV([alphas, …])	Ridge regression with built-in cross-validation.
-        }
+        return { "RidgeCV":  linear_model.RidgeCV(cv=5),  }
 
 class ARDFeatures(FeatureEncoding):
     @cached_property
     def models( self ) -> Dict[str, LinearModel]:
-        return {
-            "ARDRegression":    linear_model.ARDRegression(),          #  ARDRegression([n_iter, tol, …])	Bayesian ARD regression.
-        }
+        return { "ARDRegression":   linear_model.ARDRegression(),   }
 
 class BayesianRidgeFeatures(FeatureEncoding):
     @cached_property
     def models( self ) -> Dict[str, LinearModel]:
-        return {
-            "BayesianRidge":    linear_model.BayesianRidge(),          #  ARDRegression([n_iter, tol, …])	Bayesian ARD regression.
-        }
+        return { "BayesianRidge": linear_model.BayesianRidge(),  }
 
 
 # Best score for LinearRegressionModel
 class LarsCVLinear(LinearRegressionModel):
     @cached_property
     def models( self ) -> Dict[str, LinearModel]:
-        return {
-            "LarsCV":           linear_model.LarsCV(cv=5, eps=0.01),   # LarsCV([fit_intercept, …])	Cross-validated Least Angle Regression model.
-        }
+        return { "LarsCV":  linear_model.LarsCV(cv=5, eps=0.01), }
 
 # Best score for PolynomialFeatureEncoding
 class LarsCVPolynomial(PolynomialFeatureEncoding):
     @cached_property
     def models( self ) -> Dict[str, LinearModel]:
-        return {
-            "LarsCV":           linear_model.LarsCV(cv=5, eps=0.01),   # ARDRegression([n_iter, tol, …])	Bayesian ARD regression.
-        }
+        return { "LarsCV":  linear_model.LarsCV(cv=5, eps=0.01), }
 
 # New Best score for PolynomialFeatureEncoding
 class RidgeCVNormalizePolynomial(PolynomialFeatureEncoding):
     @cached_property
     def models( self ) -> Dict[str, LinearModel]:
-        return {
-            "RidgeCVNormalizePolynomial": linear_model.RidgeCV(cv=5, normalize=True),   # ARDRegression([n_iter, tol, …])	Bayesian ARD regression.
-        }
+        return { "RidgeCVNormalizePolynomial": linear_model.RidgeCV(cv=5, normalize=True), }
 
+
+# New Best scores for Squared/Quartic Features
+class LassoLarsSquared(SquaredFeatureEncoding):
+    @cached_property
+    def models( self ) -> Dict[str, LinearModel]:
+        return { "LassoLarsSquared": linear_model.LassoLars(eps=0.01) }
+
+
+class ElasticNetSquared(SquaredFeatureEncoding):
+    @cached_property
+    def models( self ) -> Dict[str, LinearModel]:
+        return { "ElasticNetSquared": linear_model.ElasticNet() }
 
 
 if __name__ == "__main__":
@@ -144,6 +149,7 @@ if __name__ == "__main__":
         RegularizationModelLinear().model_scores_list(),
         RegularizationModelFeatures().model_scores_list(),
         RegularizationModelPolynomial().model_scores_list(),
+        RegularizationModelSquared().model_scores_list(),
     ]), key=itemgetter(0))
     for result in results: print(result)
 

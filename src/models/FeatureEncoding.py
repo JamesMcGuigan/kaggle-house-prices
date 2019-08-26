@@ -5,6 +5,7 @@ import pandas as pd
 from cytoolz import groupby, curry
 from orderedset import OrderedSet
 from pandas import DataFrame, CategoricalDtype
+from pandas.api.types import is_numeric_dtype
 from pandas.core.common import flatten
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import PolynomialFeatures
@@ -49,7 +50,6 @@ class FeatureEncoding( LinearRegressionModel ):
         if 'X_feature_label_encode' in self.params['features']: dataframe = self.X_feature_label_encode( dataframe )
         if 'X_feature_onehot'       in self.params['features']: dataframe = self.X_feature_onehot(       dataframe )
         if 'X_feature_exclude'      in self.params['features']: dataframe = self.X_feature_exclude(      dataframe )
-        if 'X_feature_polynomial'   in self.params['features']: dataframe = self.X_feature_polynomial(   dataframe )
 
         # Check all remaining columns have been converted to numeric
         # assert len( set(dataframe.columns) - set(dataframe._get_numeric_data().columns) ) == 0
@@ -174,4 +174,52 @@ class PolynomialFeatureEncoding( FeatureEncoding ):
 
         assert output.shape[0] == dataframe.shape[0]                                                    # Rows
         assert output.shape[1] == dataframe.shape[1] + polynomial_df.shape[1] - linear_subset.shape[1]  # Columns
+        return output
+
+
+
+# As an experiment, remove all the cross pollination terms and just provide ^2 + ^3 + ^4 fields
+# Optimal tuning parameter for this dataset is 4 = Quartic
+# results = []
+# for n in range(1,10):
+#     result = SquaredFeatureEncoding( X_feature_squared=n ).summary()
+#     results.append( (result[0], result[1], n) )
+# sorted( results )
+# [(0.1507, 'CubicFeatureEncoding', 4),
+#  (0.1532, 'CubicFeatureEncoding', 3),
+#  (0.1629, 'CubicFeatureEncoding', 2),
+#  (0.1942, 'CubicFeatureEncoding', 1),
+#  (0.2231, 'CubicFeatureEncoding', 8),
+#  (0.2516, 'CubicFeatureEncoding', 5),
+#  (0.3344, 'CubicFeatureEncoding', 6),
+#  (0.3696, 'CubicFeatureEncoding', 7),
+#  (0.5343, 'CubicFeatureEncoding', 9)]
+class SquaredFeatureEncoding( PolynomialFeatureEncoding ):
+    # inheriting from PolynomialFeatureEncoding for self._X_feature_polynomial_columns()
+    # params_default still inherits directly from FeatureEncoding
+    params_default = dict( FeatureEncoding.params_default, **{
+        'features': FeatureEncoding.params_default['features'] + [
+            'X_feature_squared',
+        ],
+        'X_feature_squared': 4,
+    })
+
+
+    def X_features( self, dataframe: DataFrame ):
+        if 'X_feature_squared' in self.params['features']: dataframe = self.X_feature_squared( dataframe )
+        return dataframe
+
+
+    def X_feature_squared(self, dataframe: DataFrame) -> DataFrame:
+        output  = dataframe.copy(deep=True)
+        columns = self._X_feature_polynomial_columns(dataframe)
+        columns = list(filter( lambda column: is_numeric_dtype(dataframe[column]), columns ))  # type safety checking
+
+        # Inject ^2 and ^3 features
+        for column in columns:
+            for n in range(2, self.params['X_feature_squared']+1):
+                output[ f'{column}^{n}' ] = np.power( dataframe[column], n )
+
+        assert output.shape[0] == dataframe.shape[0]                                                        # Rows
+        assert output.shape[1] == dataframe.shape[1] + len(columns) * (self.params['X_feature_squared']-1)  # Columns
         return output
