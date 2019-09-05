@@ -21,15 +21,26 @@ kaggle competitions submit -c house-prices-advanced-regression-techniques -f dat
 
 | Analysis                           | Notebook                                                                                     |  
 |------------------------------------|----------------------------------------------------------------------------------------------| 
-| Initial Exploration of the Dataset | [notebooks/1_dataset.ipynb](notebooks/1_dataset.ipynb)                                       | 
-| Correlation Charts                 | [notebooks/2_correlations.ipynb](notebooks/2_correlations.ipynb)                             | 
-| Baseline Linear Regression         | [notebooks/3_baseline_linear_regression.ipynb](notebooks/3_baseline_linear_regression.ipynb) | 
-
+| Initial Exploration of the Dataset | [1_dataset.ipynb](1_dataset.ipynb)                                       | 
+| Correlation Charts                 | [2_correlations.ipynb](2_correlations.ipynb)                             | 
+| Baseline Linear Regression         | [3_baseline_linear_regression.ipynb](3_baseline_linear_regression.ipynb) | 
+| Feature Encoding                   | [4_feature_encoding.ipynb](4_feature_encoding.ipynb)                     |
+| Sklearn linear_model Exploration   | [5_sklearn_linear_model.ipynb](5_sklearn_linear_model.ipynb)             |
+| Quartic Feature Encoding           | [6_quartic_feature_encoding.ipynb](6_quartic_feature_encoding.ipynb)     |
 
 ## High Scores
 
-| Date       | Score   | Rank | Method | File | 
-|------------|---------|------|--------|------|
-| 2019-08-19 | 0.20892 | 3751 | LinearRegression on raw numeric fields + test/validation splitting   | [src/models/LinearRegressionModel.py](src/models/LinearRegressionModel.py) |
-| 2019-08-19 | 0.43452 | 4079 | LinearRegression on raw numeric fields                               | [src/models/LinearRegressionModel.py](src/models/LinearRegressionModel.py) | 
-| 2019-03-03 | 0.74279 | 4180 | sklearn.linear_model.LinearRegression() on all fields: .corr() > 0.5 | [src/models/LeastSquaresCorr.py](src/models/LeastSquaresCorr.py) |
+| Score   | Rank        | Class                        | 
+|---------|-------------|------------------------------|
+| 0.15502 | 3074 / 4375 | ARDFeatures()                | 
+| 0.17628 | 3470 / 4375 | RidgeFeatures()              | 
+| 0.17628 | 3493 / 4432 | LarsCVPolynomial()           |
+| 0.18379 |             | RidgeCVNormalizePolynomial() |
+| 0.20892 | 3751 / 4339 | LinearRegressionModel()      |
+| 0.21785 |             | LarsCVLinear()               |
+| 0.80406 |             | FeatureEncoding()            |
+| 2.29145 |             | LassoLarsSquared()           |
+| 2.29145 |             | SquaredFeatureEncoding()     |
+| 2.42903 |             | ElasticNetSquared()          |
+| 2.87097 |             | PolynomialFeatureEncoding()  |
+       
