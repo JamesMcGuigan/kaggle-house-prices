@@ -37,6 +37,7 @@ property-cached
 pprint
 orderedset
 sortedcontainers==0.9.6
+fastai
 
 
 # Functional Programming
