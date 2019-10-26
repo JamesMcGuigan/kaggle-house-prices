@@ -32,6 +32,7 @@ kaggle competitions submit -c house-prices-advanced-regression-techniques -f dat
 
 | Score   | Rank        | Class                        | 
 |---------|-------------|------------------------------|
+| 0.13014 | 1817 / 4926 | fastai.tabular_learner       |
 | 0.15502 | 3074 / 4375 | ARDFeatures()                | 
 | 0.17628 | 3470 / 4375 | RidgeFeatures()              | 
 | 0.17628 | 3493 / 4432 | LarsCVPolynomial()           |
@@ -43,4 +44,3 @@ kaggle competitions submit -c house-prices-advanced-regression-techniques -f dat
 | 2.29145 |             | SquaredFeatureEncoding()     |
 | 2.42903 |             | ElasticNetSquared()          |
 | 2.87097 |             | PolynomialFeatureEncoding()  |
-       
